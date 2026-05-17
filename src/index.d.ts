@@ -114,6 +114,14 @@ interface IPCWindow {
   getZoomFactor: () => Promise<number>;
 }
 
+interface IPCRedistribution {
+  trigger: (payload: { date: string; totalGoalHours: number; hoursCompleted: number; subject?: string | null; spreadDays?: number; maxExtraHoursPerDay?: number }) => Promise<unknown>;
+  getSummary: () => Promise<unknown>;
+  getHoursForDate: (date: string) => Promise<unknown>;
+  getAllPending: () => Promise<unknown>;
+  markApplied: (date: string) => Promise<unknown>;
+}
+
 interface API {
   db: IPCDB;
   task: IPCTaskOps;
@@ -122,6 +130,7 @@ interface API {
   notes: IPCNotes;
   plan: IPCPlan;
   events: IPCEvents;
+  redistribution: IPCRedistribution;
   window: IPCWindow;
 }
 

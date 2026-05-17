@@ -206,6 +206,7 @@ export function App() {
           planUserState,
           activePlan,
           weeklyProgress,
+          debtData,
         ] = await Promise.all([
           window.api.db.getDayContext(date),
           window.api.db.getWeeklyStats(date),
@@ -213,16 +214,17 @@ export function App() {
           window.api.plan.getUserState(),
           window.api.plan.getActiveMetadata(),
           window.api.plan.getWeeklyProgress(),
+          window.api.redistribution.getHoursForDate(date),
         ]);
         const hoursCompleted = context.totalMinutes / 60;
 
-        // Compute daily goal: base + debt + penalty
-        // TODO: Get persisted debt and penalty from DB when goal persistence is implemented
+        // Compute daily goal: base + debt + penalty (capped at MAX_DAILY_HOURS)
         const baseGoal = planUserState?.base_goal_hours ?? GOAL_CONFIG.BASE_GOAL_HOURS;
-        const debtAssigned = 0; // Future: Get from DB
+        const debtAssigned = (debtData as { data?: { hours: number } })?.data?.hours || 0;
         const penaltyModeActive = (planUserState?.penalty_mode_active ?? 0) === 1;
         const penaltyAssigned = penaltyModeActive ? GOAL_CONFIG.PENALTY_EXTRA_HOURS : 0;
-        const totalGoal = baseGoal + debtAssigned + penaltyAssigned;
+        const uncappedGoal = baseGoal + debtAssigned + penaltyAssigned;
+        const totalGoal = Math.min(uncappedGoal, GOAL_CONFIG.MAX_DAILY_HOURS);
         
         const remaining = Math.max(totalGoal - hoursCompleted, 0);
         const progressPercent = totalGoal > 0 ? Math.min((hoursCompleted / totalGoal) * 100, 100) : 0;

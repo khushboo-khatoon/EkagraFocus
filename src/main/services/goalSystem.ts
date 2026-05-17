@@ -56,7 +56,8 @@ export function calculateDailyGoal(
   // Build up goal
   const debtAssigned = debtFromPrevious;
   const penaltyAssigned = penaltyModeActive ? PENALTY_EXTRA_HOURS : 0;
-  const totalGoal = BASE_GOAL_HOURS + debtAssigned + penaltyAssigned;
+  const uncappedGoal = BASE_GOAL_HOURS + debtAssigned + penaltyAssigned;
+  const totalGoal = Math.min(uncappedGoal, GOAL_CONFIG.MAX_DAILY_HOURS);
 
   // Calculate progress
   const remaining = Math.max(totalGoal - hoursCompleted, 0);

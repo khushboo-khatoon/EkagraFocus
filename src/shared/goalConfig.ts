@@ -1,5 +1,7 @@
+//  In future we will make this dynamic in settings
 export const GOAL_CONFIG = {
   BASE_GOAL_HOURS: 10,
+  MAX_DAILY_HOURS: 12,
   PENALTY_ACTIVATION_STREAK: 2,
   PENALTY_DURATION_DAYS: 7,
   PENALTY_EXTRA_HOURS: 1,
