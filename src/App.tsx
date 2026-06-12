@@ -13,6 +13,7 @@ import { NotificationToast } from './components/NotificationToast';
 import { GOAL_CONFIG } from './shared/goalConfig';
 
 function DashboardOverview() {
+  
   const {
     activeTab,
     dailyStatus,

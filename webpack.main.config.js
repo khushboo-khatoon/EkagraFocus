@@ -2,16 +2,13 @@ const { rules } = require('./webpack.rules');
 const { plugins } = require('./webpack.plugins');
 
 module.exports = {
-  /**
-   * This is the main entry point for your application, it's the first file
-   * that runs in the main process.
-   * Updated to use the new structure: src/main/index.ts (backend)
-   */
+  target: 'electron-main',
   entry: './src/main/index.ts',
-  // Put your normal webpack config below here
-  module: {
-    rules,
+  node: {
+    __dirname: false,
+    __filename: false,
   },
+  module: { rules },
   plugins,
   resolve: {
     extensions: ['.js', '.ts', '.jsx', '.tsx', '.css', '.json'],
