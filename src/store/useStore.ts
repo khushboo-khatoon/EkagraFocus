@@ -16,6 +16,7 @@ import type {
   MilestoneStatus,
   WeeklyProgressView,
 } from '../types';
+import type { IPCChatSession } from '../shared/ipc';
 const calculateRemainingHours = (
   totalGoal: number,
   hoursCompleted: number
@@ -102,6 +103,8 @@ interface FocusAgentState {
   // ── Chat & Messages ───────────────────────────────────────
   messages: ChatMessage[];
   isAgentThinking: boolean;
+  activeChatSessionId: string | null;
+  chatSessions: IPCChatSession[];
 
   // ── Timer ─────────────────────────────────────────────────
   timerRunning: boolean;
@@ -156,6 +159,10 @@ interface FocusAgentState {
   setMessages: (messages: ChatMessage[]) => void;
   setAgentThinking: (value: boolean) => void;
   clearMessages: () => void;
+  setActiveChatSession: (id: string | null) => void;
+  loadChatSessions: () => Promise<void>;
+  loadMessagesForSession: (id: string) => Promise<void>;
+  createNewSession: (title?: string) => Promise<void>;
 
   startTimer: (subject: string, durationMinutes?: number) => void;
   stopTimer: () => void;
@@ -212,6 +219,8 @@ export const useStore = create<FocusAgentState>((set, get) => ({
 
   messages: [],
   isAgentThinking: false,
+  activeChatSessionId: null,
+  chatSessions: [],
 
   timerRunning: false,
   timerSeconds: 0,
@@ -268,6 +277,50 @@ export const useStore = create<FocusAgentState>((set, get) => ({
   setMessages: (messages) => set({ messages }),
   setAgentThinking: (value) => set({ isAgentThinking: value }),
   clearMessages: () => set({ messages: [] }),
+  setActiveChatSession: (id) => set({ activeChatSessionId: id }),
+  loadChatSessions: async () => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const api = (window as any).api;
+      if (!api?.chat?.getSessions) return;
+      const res = await api.chat.getSessions();
+      if (res?.success && res.data) {
+        set({ chatSessions: res.data });
+      }
+    } catch (err) {
+      console.error('Failed to load chat sessions:', err);
+    }
+  },
+  loadMessagesForSession: async (id) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const api = (window as any).api;
+      if (!api?.chat?.getMessages) return;
+      const res = await api.chat.getMessages(id);
+      if (res?.success && res.data) {
+        set({ messages: res.data, activeChatSessionId: id });
+      }
+    } catch (err) {
+      console.error('Failed to load messages:', err);
+    }
+  },
+  createNewSession: async (title = 'New Chat') => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const api = (window as any).api;
+      if (!api?.chat?.createSession) return;
+      const res = await api.chat.createSession(title);
+      if (res?.success && res.data) {
+        set((state) => ({
+          chatSessions: [res.data, ...state.chatSessions],
+          activeChatSessionId: res.data.id,
+          messages: [],
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to create session:', err);
+    }
+  },
 
   // Timer actions
   startTimer: (subject, durationMinutes = 25) =>
