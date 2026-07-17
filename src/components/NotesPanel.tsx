@@ -28,6 +28,13 @@ const EMPTY_EDITOR: NoteEditorState = {
   isPinned: false,
 };
 const MAX_ATTACHMENT_SIZE_BYTES = 50 * 1024 * 1024; 
+const ALLOWED_ATTACHMENT_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.pdf', '.doc', '.docx', '.txt', '.md'];
+
+function isAllowedAttachmentType(fileName: string): boolean {
+  const lastDot = fileName.lastIndexOf('.');
+  const ext = lastDot === -1 ? '' : fileName.slice(lastDot).toLowerCase();
+  return ALLOWED_ATTACHMENT_EXTENSIONS.includes(ext);
+}
 
 function parseStringList(source: string | null | undefined): string[] {
   if (!source) return [];
@@ -394,6 +401,10 @@ const handleAttachmentSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
                 skipped.push(`${file.name} (duplicate)`)
                 return
             }
+            if (!isAllowedAttachmentType(file.name)) {
+                skipped.push(`${file.name} (unsupported type)`)
+                return
+            }
 
             if (file.size > MAX_ATTACHMENT_SIZE_BYTES) {
                 skipped.push(`${file.name} (too large)`)
@@ -416,7 +427,7 @@ const handleAttachmentSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
 
     if (skipped.length > 0) {
         setErrorMessage(
-            `Skipped ${skipped.length} file(s): ${skipped.join(", ")}`
+           `Skipped ${skipped.length} file(s): ${skipped.join(", ")}. Accepted types: ${ALLOWED_ATTACHMENT_EXTENSIONS.join(", ")}.`
         )
     } else {
         setErrorMessage("")
